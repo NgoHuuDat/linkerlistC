@@ -43,8 +43,9 @@ void AddNodeTail(List* list, Node* node);   //Add Node into list with location t
 bool ReadDataFile(FILE* file,Student* student); //Read data one student from file
 void ReadFiles(FILE* file, List* list); //Read data all students from file and add in list
 //Write infor one student and write all student into file 
-void WriteDataFile(FILE* file, Student* student);   //Write data one student out file
+void WriteDataFile(FILE* file, Student student);   //Write data one student out file
 void WriteFile(FILE* file, List list);  //Write all data students in list out to file
+char* TransformIntString(int value, char* result, int base);
 
 //Write file infor students top mediummark
 void WriteStudentBetter(FILE* file,List list);  //Write data student have mediummark better out file
@@ -143,11 +144,11 @@ bool ReadDataFile(FILE* file, Student* student)
     buffer = strstr(buffer,"U");
     strcpy(student->id,buffer);
     buffer = strtok(NULL,"/");
-    student->birthdate.day = strtol(buffer,NULL,2);
+    student->birthdate.day = strtol(buffer,NULL,10);
     buffer = strtok(NULL,"/");
-    student->birthdate.month = strtol(buffer,NULL,2);
+    student->birthdate.month = strtol(buffer,NULL,10);
     buffer = strtok(NULL,",");
-    student->birthdate.year = strtol(buffer,NULL,4);
+    student->birthdate.year = strtol(buffer,NULL,10);
     buffer = strtok(NULL,",");
     student->mark = strtof(buffer,NULL);
     
@@ -176,12 +177,12 @@ void ReadFiles(FILE* file, List* list)
     free(node);
 }
 
-void WriteDataFile(FILE* file, Student* student)
+void WriteDataFile(FILE* file, Student student)
 {
-    fprintf(file,"%s, ",student->name);
-    fprintf(file,"%s, ",student->id);
-    fprintf(file,"%hd/%hd/%hd, ",student->birthdate.day,student->birthdate.month,student->birthdate.year);
-    fprintf(file,"%0.2f",student->mark);
+    fprintf(file,"%s, ",student.name);
+    fprintf(file,"%s, ",student.id);
+    fprintf(file,"%hd/%hd/%hd, ",student.birthdate.day,student.birthdate.month,student.birthdate.year);
+    fprintf(file,"%0.2f",student.mark);
 }
 void WriteFile(FILE* file, List list)
 {
@@ -196,12 +197,36 @@ void WriteFile(FILE* file, List list)
     InterchangeSort(list);
     for(node = list.pHead; node != NULL; node = node->pNext)
     {
-        WriteDataFile(file,&node->data);
+        WriteDataFile(file,node->data);
         fprintf(file,"\n");
     }
     node = NULL;
     free(node);
     fclose(file);
+}
+
+char* TransformIntString(int value, char* result, int base)
+{
+    if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+    char* ptr = result, *ptr1 = result, tmp_char;
+    int tmp_value;
+
+    do {
+        tmp_value = value;
+        value /= base;
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+    } while ( value );
+
+    // Apply negative sign
+    if (tmp_value < 0) *ptr++ = '-';
+    *ptr-- = '\0';
+    while(ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr--= *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return result;
 }
 
 void WriteStudentBetter(FILE* file,List list)
@@ -228,7 +253,7 @@ void WriteStudentBetter(FILE* file,List list)
     {
         if(node->data.mark == maxmark)
         {
-            WriteDataFile(file,&node->data);
+            WriteDataFile(file,node->data);
             fprintf(file,"\n");
         }
     }
